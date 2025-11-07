@@ -28,7 +28,7 @@ How important is fine-grained timing (e.g., keystroke-level vs. edit-batch granu
 Affects event frequency, storage, and schema design.
 
 
-4
+3
 Are there specific types of codebases or bugs we should target first?
 Usually choosing a specific axis of problem to solve is the best way to approach data collection
 
@@ -71,4 +71,26 @@ PRTelemetryTrace.json schema
 Design rationale:
 Every time we run a command is treated as an event. Each event implies that some reasoning has occurred leading to a new attempt, and the engineer can optionally provide an explanation of what they’re trying. This represents a reasonable base unit for data collection—fine-grained enough to capture intent and iteration, yet simple enough to implement. More granularity could later help model how high-quality fixes are developed, but this structure is a solid baseline. 
 This schema models developer activity as timestamped events within a single, append-only array. Each event has a unique event_id for deduplication and carries contextual data specific to its type, making the format flexible and extensible without future schema changes. Repository context (name, branch, working_commit) provides reproducibility excluding other dependencies outside of the repository. The result is a minimal, consistent, and evolvable structure that cleanly captures the core developer interaction loop. Storing unified diffs keeps edits interpretable, compressed and uses already existing tooling from git . A trace id is specific bug we are working on or solved. We can consolidate multiple jsons of the same trace later if needed based on timestamps so we can upload regularly.
+
+
+Stack:
+
+FastAPI
+Simple, async-ready, type-safe REST backend
+Easy to spin up and validates JSON automatically
+
+SQLite
+Local embedded database
+Perfect for prototype persistence with zero setup
+
+Requests (client)
+Lightweight HTTP uploader
+Works offline fallback logic easily
+
+JSONL queue
+Offline storage
+Append-only, resilient, human-readable
+
+Ollama
+I am a big fan of self hosting!
 
