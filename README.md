@@ -1,3 +1,21 @@
+Quickstart:
+
+# 1. Create and activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 2. Install dependencies
+pip install --upgrade pip
+pip install fastapi uvicorn requests pytest
+
+# 3. Start the FastAPI backend
+uvicorn server:app --reload --port 8000
+
+
+# 5. Upload the telemetry trace
+python client_upload.py
+
+
 Clarifying questions
 
 1
