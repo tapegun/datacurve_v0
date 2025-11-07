@@ -8,6 +8,10 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install fastapi uvicorn requests pytest
 
+https://ollama.com/download
+pip install ollama
+ollama run gemma3:4b
+
 # 3. Run Pipeline
 chmod +x run_pipeline.sh
 ./run_pipeline.sh

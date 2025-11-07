@@ -6,6 +6,8 @@ import tempfile
 import shutil
 from pathlib import Path
 
+from ollama import chat
+
 
 def run_cmd(cmd, cwd=None):
     """Run a shell command and return (stdout, stderr, exitcode)."""
@@ -78,6 +80,11 @@ def validate_trace(trace_id: str, db_path="telemetry.db", base_repo="fake_codeba
             all_good = False
             break
 
+        # LLM scoring for diff and reasoning
+        reasoning = ev["data"].get("reasoning", "")
+        llm_score, llm_explanation = score_with_llm(diff, reasoning)
+        print(f"🤖 LLM Score: {llm_score}\n🤖 LLM Explanation: {llm_explanation}")
+
         # Run pytest
         print("▶️ Running pytest...")
 
@@ -117,6 +124,27 @@ def validate_trace(trace_id: str, db_path="telemetry.db", base_repo="fake_codeba
         print(f"\n⚠️ Trace {trace_id} failed validation — one or more events did not match telemetry results.")
 
     shutil.rmtree(temp_dir)
+
+
+def score_with_llm(diff, reasoning, model="gemma3:4b"):
+    """
+    Call Ollama LLM to score the diff and reasoning. Returns (score, explanation).
+    """
+    prompt = f"""
+You are a code review assistant. Given the following code diff and developer reasoning, rate how well the reasoning justifies the code change on a scale of 1 (poor) to 5 (excellent). Explain your score in 1-2 sentences.\n\nDIFF:\n{diff}\n\nREASONING:\n{reasoning}\n\nRespond in JSON: {{\"score\": <int>, \"explanation\": <string>}}
+"""
+    try:
+        response = chat(model=model, messages=[{"role": "user", "content": prompt}])
+        content = response['message']['content']
+        import re, json as pyjson
+        match = re.search(r'\{.*\}', content, re.DOTALL)
+        if match:
+            result = pyjson.loads(match.group(0))
+            return result.get("score", "?"), result.get("explanation", "?")
+        else:
+            return "?", content.strip()
+    except Exception as e:
+        return "?", f"LLM call failed: {e}"
 
 
 if __name__ == "__main__":
